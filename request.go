@@ -21,7 +21,7 @@ func get(jar *cookiejar.Jar, url string) (*http.Response, error) {
 	client := makeClient(jar)
 	res, err := client.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("http.Client.Get: %v", err.Error())
+		return nil, e("http.Client.Get", err)
 	}
 	if c := res.StatusCode; c != 200 {
 		return nil, statusCodeErr(c)
@@ -33,7 +33,7 @@ func post(jar *cookiejar.Jar, url string, data url.Values) (*http.Response, erro
 	client := makeClient(jar)
 	res, err := client.PostForm(url, data)
 	if err != nil {
-		return nil, fmt.Errorf("http.client.PostForm: %v", err.Error())
+		return nil, e("http.client.PostForm", err)
 	}
 	if c := res.StatusCode; c != 200 {
 		return nil, statusCodeErr(c)

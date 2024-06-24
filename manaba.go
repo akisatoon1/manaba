@@ -1,13 +1,8 @@
 package manaba
 
 import (
-	"fmt"
 	"net/http/cookiejar"
 )
-
-func e(funcName string, e error) error {
-	return fmt.Errorf("%v: %v", funcName, e.Error())
-}
 
 func Login(jar *cookiejar.Jar, username string, password string) error {
 	// 1th flow
