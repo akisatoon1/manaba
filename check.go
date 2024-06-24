@@ -34,7 +34,7 @@ func checkResponse(res *http.Response, body io.ReadCloser, stdUrl string, stdTit
 
 func checkResult(res *http.Response) error {
 	Url := res.Request.URL
-	if u := getUrl(Url); u != HOME_URL {
+	if u := getUrl(Url); u != gHomeUrl {
 		return fmt.Errorf("fail to get resource. unexpected url: '%v'", u)
 	}
 	return nil

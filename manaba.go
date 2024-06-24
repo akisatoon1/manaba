@@ -6,13 +6,13 @@ import (
 
 func Login(jar *cookiejar.Jar, username string, password string) error {
 	// 1th flow
-	res1, err := get(jar, HOME_URL)
+	res1, err := get(jar, gHomeUrl)
 	if err != nil {
 		return e("get", err)
 	}
 	defer res1.Body.Close()
 
-	doc1, err := checkResponse(res1, res1.Body, FIRST_POST_URL, SSO_TITLE)
+	doc1, err := checkResponse(res1, res1.Body, gFirstPostUrl, gSsoTitle)
 	if err != nil {
 		return e("checkResponse 1", err)
 	}
@@ -25,13 +25,13 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 	data1.Set("password", password)
 
 	// 2th flow
-	res2, err := post(jar, FIRST_POST_URL, data1)
+	res2, err := post(jar, gFirstPostUrl, data1)
 	if err != nil {
 		return e("post", err)
 	}
 	defer res2.Body.Close()
 
-	doc2, err := checkResponse(res2, res2.Body, FIRST_POST_URL, META_TITLE)
+	doc2, err := checkResponse(res2, res2.Body, gFirstPostUrl, gMetaTitle)
 	if err != nil {
 		return e("checkResponse 2", err)
 	}
@@ -48,7 +48,7 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 	}
 	defer res3.Body.Close()
 
-	doc3, err := checkResponse(res3, res3.Body, META_URL, SAML_TITLE)
+	doc3, err := checkResponse(res3, res3.Body, gMetaUrl, gSamlTitle)
 	if err != nil {
 		return e("checkResponse 3", err)
 	}
@@ -59,7 +59,7 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 	}
 
 	// 4th flow
-	res4, err := post(jar, SECOND_POST_URL, data2)
+	res4, err := post(jar, gSecondPostUrl, data2)
 	if err != nil {
 		return e("post", err)
 	}
