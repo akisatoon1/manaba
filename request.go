@@ -2,6 +2,7 @@ package manaba
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -32,7 +33,7 @@ func get(jar *cookiejar.Jar, url string) (*http.Response, error) {
 func post(jar *cookiejar.Jar, url string, data url.Values) (*http.Response, error) {
 	client := makeClient(jar)
 	res, err := client.PostForm(url, data)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, e("http.client.PostForm", err)
 	}
 	if c := res.StatusCode; c != 200 {
