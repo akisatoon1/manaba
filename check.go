@@ -26,7 +26,8 @@ func checkResponse(res *http.Response, body io.ReadCloser, stdUrl string, stdTit
 	}
 
 	if title != stdTitle {
-		return nil, fmt.Errorf("unexpected title: '%v'", title)
+		// doc for isIncorrectUsernameOrPassword
+		return doc, fmt.Errorf("unexpected title: '%v'", title)
 	}
 
 	return doc, nil
@@ -38,6 +39,13 @@ func checkResult(res *http.Response) error {
 		return fmt.Errorf("fail to get resource. unexpected url: '%v'", u)
 	}
 	return nil
+}
+
+func isIncorrectUsernameOrPassword(doc *goquery.Document) bool {
+	if doc == nil {
+		return false
+	}
+	return doc.Find("#comment").Find("p").Text() == "User Name or password is invalid"
 }
 
 func getUrl(u *url.URL) string {

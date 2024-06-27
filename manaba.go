@@ -1,6 +1,7 @@
 package manaba
 
 import (
+	"fmt"
 	"net/http/cookiejar"
 )
 
@@ -33,6 +34,9 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 
 	doc2, err := checkResponse(res2, res2.Body, gFirstPostUrl, gMetaTitle)
 	if err != nil {
+		if isIncorrectUsernameOrPassword(doc2) {
+			return fmt.Errorf("incorrect username or password")
+		}
 		return e("checkResponse 2", err)
 	}
 
