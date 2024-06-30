@@ -151,3 +151,28 @@ func SubmitReports(jar *cookiejar.Jar, url string) error {
 
 	return nil
 }
+
+func CancelSubmittion(jar *cookiejar.Jar, url string) error {
+	body := &bytes.Buffer{} // request body
+	mw := multipart.NewWriter(body)
+
+	//
+	// create body for multipart/form-data
+	//
+	part, _ := mw.CreateFormField("action_ReportStudent_uncommitdone")
+	io.WriteString(part, "提出取消(再提出する)")
+
+	err := setCommonPart(jar, url, mw)
+	if err != nil {
+		return e("setCommonPart", err)
+	}
+
+	mw.Close()
+
+	err = postMultipart(jar, url, mw.FormDataContentType(), body)
+	if err != nil {
+		return e("setCommonPart", err)
+	}
+
+	return nil
+}
