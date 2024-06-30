@@ -155,3 +155,53 @@ func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
 
 	return nil
 }
+
+func SubmitReports(jar *cookiejar.Jar, url string) error {
+	body := &bytes.Buffer{} // request body
+	mw := multipart.NewWriter(body)
+
+	//
+	// create body for multipart/form-data
+	//
+	part, _ := mw.CreateFormField("action_ReportStudent_commitdone")
+	io.WriteString(part, "提出")
+
+	part, _ = mw.CreateFormField("manaba-form")
+	io.WriteString(part, "1")
+
+	part, _ = mw.CreateFormField("SessionValue")
+	io.WriteString(part, "@1")
+
+	// get "SessionValue1" field value and write it
+	res, err := get(jar, url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil && err != io.EOF {
+		return e("goquery.NewDocumentFromReader", err)
+	}
+	val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
+	if !isExist {
+		return fmt.Errorf("'value' attribute doesn't exist")
+	}
+	part, _ = mw.CreateFormField("SessionValue1")
+	io.WriteString(part, val)
+
+	mw.Close()
+
+	// POST to url
+	req, _ := http.NewRequest("POST", url, body)
+	req.Header.Add("Content-Type", mw.FormDataContentType())
+	client := makeClient(jar)
+	r, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	if c := r.StatusCode; c != 200 {
+		return fmt.Errorf("status code is not 200 but %v", c)
+	}
+	return nil
+}
