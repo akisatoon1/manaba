@@ -92,7 +92,7 @@ func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return err
+		return e("os.Open", err)
 	}
 	defer file.Close()
 
@@ -105,7 +105,7 @@ func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
 	_, fileName := filepath.Split(filePath)
 	part, err := mw.CreateFormFile("RptSubmitFile", fileName)
 	if err != nil {
-		return err
+		return e("mw.CreateFormFile", err)
 	}
 	io.Copy(part, file)
 
@@ -114,14 +114,14 @@ func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
 
 	err = setCommonPart(jar, url, mw)
 	if err != nil {
-		return err
+		return e("mw.CreateFormFile", err)
 	}
 
 	mw.Close()
 
 	err = postMultipart(jar, url, mw.FormDataContentType(), body)
 	if err != nil {
-		return err
+		return e("postMultipart", err)
 	}
 
 	return nil
@@ -139,14 +139,14 @@ func SubmitReports(jar *cookiejar.Jar, url string) error {
 
 	err := setCommonPart(jar, url, mw)
 	if err != nil {
-		return err
+		return e("setCommonPart", err)
 	}
 
 	mw.Close()
 
 	err = postMultipart(jar, url, mw.FormDataContentType(), body)
 	if err != nil {
-		return err
+		return e("setCommonPart", err)
 	}
 
 	return nil

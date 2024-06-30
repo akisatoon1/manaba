@@ -48,11 +48,11 @@ func postMultipart(jar *cookiejar.Jar, url string, contentType string, body io.R
 	client := makeClient(jar)
 	r, err := client.Do(req)
 	if err != nil && err != io.EOF {
-		return err
+		return e("client.Do", err)
 	}
 	defer r.Body.Close()
 	if c := r.StatusCode; c != 200 {
-		return fmt.Errorf("status code is not 200 but %v", c)
+		return statusCodeErr(c)
 	}
 	return nil
 }
