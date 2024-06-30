@@ -30,7 +30,7 @@ func get(jar *cookiejar.Jar, url string) (*http.Response, error) {
 	return res, nil
 }
 
-func post(jar *cookiejar.Jar, url string, data url.Values) (*http.Response, error) {
+func postForm(jar *cookiejar.Jar, url string, data url.Values) (*http.Response, error) {
 	client := makeClient(jar)
 	res, err := client.PostForm(url, data)
 	if err != nil && err != io.EOF {
@@ -40,4 +40,19 @@ func post(jar *cookiejar.Jar, url string, data url.Values) (*http.Response, erro
 		return nil, statusCodeErr(c)
 	}
 	return res, nil
+}
+
+func postMultipart(jar *cookiejar.Jar, url string, contentType string, body io.Reader) error {
+	req, _ := http.NewRequest("POST", url, body)
+	req.Header.Add("Content-Type", contentType)
+	client := makeClient(jar)
+	r, err := client.Do(req)
+	if err != nil && err != io.EOF {
+		return err
+	}
+	defer r.Body.Close()
+	if c := r.StatusCode; c != 200 {
+		return fmt.Errorf("status code is not 200 but %v", c)
+	}
+	return nil
 }

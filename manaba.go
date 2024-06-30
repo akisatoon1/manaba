@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"net/http"
 	"net/http/cookiejar"
 	"os"
 	"path/filepath"
@@ -33,7 +32,7 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 	data1.Set("password", password)
 
 	// 2th flow
-	res2, err := post(jar, gFirstPostUrl, data1)
+	res2, err := postForm(jar, gFirstPostUrl, data1)
 	if err != nil {
 		return e("post", err)
 	}
@@ -70,7 +69,7 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 	}
 
 	// 4th flow
-	res4, err := post(jar, gSecondPostUrl, data2)
+	res4, err := postForm(jar, gSecondPostUrl, data2)
 	if err != nil {
 		return e("post", err)
 	}
@@ -120,17 +119,9 @@ func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
 
 	mw.Close()
 
-	// POST to url
-	req, _ := http.NewRequest("POST", url, body)
-	req.Header.Add("Content-Type", mw.FormDataContentType())
-	client := makeClient(jar)
-	r, err := client.Do(req)
+	err = postMultipart(jar, url, mw.FormDataContentType(), body)
 	if err != nil {
 		return err
-	}
-	defer r.Body.Close()
-	if c := r.StatusCode; c != 200 {
-		return fmt.Errorf("status code is not 200 but %v", c)
 	}
 
 	return nil
@@ -153,17 +144,10 @@ func SubmitReports(jar *cookiejar.Jar, url string) error {
 
 	mw.Close()
 
-	// POST to url
-	req, _ := http.NewRequest("POST", url, body)
-	req.Header.Add("Content-Type", mw.FormDataContentType())
-	client := makeClient(jar)
-	r, err := client.Do(req)
+	err = postMultipart(jar, url, mw.FormDataContentType(), body)
 	if err != nil {
 		return err
 	}
-	defer r.Body.Close()
-	if c := r.StatusCode; c != 200 {
-		return fmt.Errorf("status code is not 200 but %v", c)
-	}
+
 	return nil
 }
