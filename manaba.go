@@ -10,8 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-
-	"github.com/PuerkitoBio/goquery"
 )
 
 func Login(jar *cookiejar.Jar, username string, password string) error {
@@ -115,28 +113,10 @@ func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
 	part, _ = mw.CreateFormField("action_ReportStudent_submitdone")
 	io.WriteString(part, "アップロード")
 
-	part, _ = mw.CreateFormField("manaba-form")
-	io.WriteString(part, "1")
-
-	part, _ = mw.CreateFormField("SessionValue")
-	io.WriteString(part, "@1")
-
-	// get "SessionValue1" field value and write it
-	res, err := get(jar, url)
+	err = setCommonPart(jar, url, mw)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil && err != io.EOF {
-		return e("goquery.NewDocumentFromReader", err)
-	}
-	val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
-	if !isExist {
-		return fmt.Errorf("'value' attribute doesn't exist")
-	}
-	part, _ = mw.CreateFormField("SessionValue1")
-	io.WriteString(part, val)
 
 	mw.Close()
 
@@ -166,28 +146,10 @@ func SubmitReports(jar *cookiejar.Jar, url string) error {
 	part, _ := mw.CreateFormField("action_ReportStudent_commitdone")
 	io.WriteString(part, "提出")
 
-	part, _ = mw.CreateFormField("manaba-form")
-	io.WriteString(part, "1")
-
-	part, _ = mw.CreateFormField("SessionValue")
-	io.WriteString(part, "@1")
-
-	// get "SessionValue1" field value and write it
-	res, err := get(jar, url)
+	err := setCommonPart(jar, url, mw)
 	if err != nil {
 		return err
 	}
-	defer res.Body.Close()
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil && err != io.EOF {
-		return e("goquery.NewDocumentFromReader", err)
-	}
-	val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
-	if !isExist {
-		return fmt.Errorf("'value' attribute doesn't exist")
-	}
-	part, _ = mw.CreateFormField("SessionValue1")
-	io.WriteString(part, val)
 
 	mw.Close()
 

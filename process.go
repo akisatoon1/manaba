@@ -2,6 +2,9 @@ package manaba
 
 import (
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
@@ -40,4 +43,31 @@ func getMetaUrl(doc *goquery.Document) (string, error) {
 		return "", nil
 	}
 	return content[i+len(subs):], nil
+}
+
+func setCommonPart(jar *cookiejar.Jar, url string, mw *multipart.Writer) error {
+	part, _ := mw.CreateFormField("manaba-form")
+	io.WriteString(part, "1")
+
+	part, _ = mw.CreateFormField("SessionValue")
+	io.WriteString(part, "@1")
+
+	// get "SessionValue1" field value and write it
+	res, err := get(jar, url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil && err != io.EOF {
+		return e("goquery.NewDocumentFromReader", err)
+	}
+	val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
+	if !isExist {
+		return fmt.Errorf("'value' attribute doesn't exist")
+	}
+	part, _ = mw.CreateFormField("SessionValue1")
+	io.WriteString(part, val)
+
+	return nil
 }
