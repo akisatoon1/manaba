@@ -1,8 +1,17 @@
 package manaba
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
 	"net/http/cookiejar"
+	"os"
+	"path/filepath"
+	"regexp"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 func Login(jar *cookiejar.Jar, username string, password string) error {
@@ -72,6 +81,76 @@ func Login(jar *cookiejar.Jar, username string, password string) error {
 	err = checkResult(res4)
 	if err != nil {
 		return e("checkResult", err)
+	}
+
+	return nil
+}
+
+func UploadFile(jar *cookiejar.Jar, url string, filePath string) error {
+	// check url
+	isMatch, _ := regexp.MatchString("^https://room.chuo-u.ac.jp/ct/course_[0-9]+_report_[0-9]+$", url)
+	if !isMatch {
+		return fmt.Errorf("invalid url for uploading file")
+	}
+
+	file, err := os.Open(filePath)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	body := &bytes.Buffer{} // request body
+	mw := multipart.NewWriter(body)
+
+	//
+	// create body for multipart/form-data
+	//
+	_, fileName := filepath.Split(filePath)
+	part, err := mw.CreateFormFile("RptSubmitFile", fileName)
+	if err != nil {
+		return err
+	}
+	io.Copy(part, file)
+
+	part, _ = mw.CreateFormField("action_ReportStudent_submitdone")
+	io.WriteString(part, "アップロード")
+
+	part, _ = mw.CreateFormField("manaba-form")
+	io.WriteString(part, "1")
+
+	part, _ = mw.CreateFormField("SessionValue")
+	io.WriteString(part, "@1")
+
+	// get "SessionValue1" field value and write it
+	res, err := get(jar, url)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil && err != io.EOF {
+		return e("goquery.NewDocumentFromReader", err)
+	}
+	val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
+	if !isExist {
+		return fmt.Errorf("'value' attribute doesn't exist")
+	}
+	part, _ = mw.CreateFormField("SessionValue1")
+	io.WriteString(part, val)
+
+	mw.Close()
+
+	// POST to url
+	req, _ := http.NewRequest("POST", url, body)
+	req.Header.Add("Content-Type", mw.FormDataContentType())
+	client := makeClient(jar)
+	r, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer r.Body.Close()
+	if c := r.StatusCode; c != 200 {
+		return fmt.Errorf("status code is not 200 but %v", c)
 	}
 
 	return nil
