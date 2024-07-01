@@ -52,22 +52,25 @@ func setCommonPart(jar *cookiejar.Jar, url string, mw *multipart.Writer) error {
 	part, _ = mw.CreateFormField("SessionValue")
 	io.WriteString(part, "@1")
 
-	// get "SessionValue1" field value and write it
-	res, err := get(jar, url)
-	if err != nil {
-		return err
-	}
-	defer res.Body.Close()
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil && err != io.EOF {
-		return e("goquery.NewDocumentFromReader", err)
-	}
-	val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
-	if !isExist {
-		return fmt.Errorf("'value' attribute doesn't exist")
+	// if ManabaSessionValue1 not defined, get "SessionValue1" field value
+	if ManabaSessionValue1 == "" {
+		res, err := get(jar, url)
+		if err != nil {
+			return err
+		}
+		defer res.Body.Close()
+		doc, err := goquery.NewDocumentFromReader(res.Body)
+		if err != nil && err != io.EOF {
+			return e("goquery.NewDocumentFromReader", err)
+		}
+		val, isExist := doc.Find("input[name=SessionValue1]").First().Attr("value")
+		if !isExist {
+			return fmt.Errorf("'value' attribute doesn't exist")
+		}
+		ManabaSessionValue1 = val
 	}
 	part, _ = mw.CreateFormField("SessionValue1")
-	io.WriteString(part, val)
+	io.WriteString(part, ManabaSessionValue1)
 
 	return nil
 }
