@@ -176,3 +176,34 @@ func CancelSubmittion(jar *cookiejar.Jar, url string) error {
 
 	return nil
 }
+
+func DeleteAllFiles(jar *cookiejar.Jar, url string) error {
+	body := &bytes.Buffer{} // request body
+	mw := multipart.NewWriter(body)
+
+	//
+	// create body for multipart/form-data
+	//
+	IDs, err := getFileIDs(jar, url)
+	if err != nil {
+		return e("getFileIDs", err)
+	}
+
+	for _, ID := range IDs {
+		mw.CreateFormField(ID)
+
+		err = setCommonPart(jar, url, mw)
+		if err != nil {
+			return e("setCommonPart", err)
+		}
+
+		mw.Close()
+
+		err = postMultipart(jar, url, mw.FormDataContentType(), body)
+		if err != nil {
+			return e("postMultipart", err)
+		}
+	}
+
+	return nil
+}

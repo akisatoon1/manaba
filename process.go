@@ -71,3 +71,24 @@ func setCommonPart(jar *cookiejar.Jar, url string, mw *multipart.Writer) error {
 
 	return nil
 }
+
+func getFileIDs(jar *cookiejar.Jar, url string) ([]string, error) {
+	res, err := get(jar, url)
+	if err != nil {
+		return nil, e("get", err)
+	}
+	defer res.Body.Close()
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil && err != io.EOF {
+		return nil, e("goquery.NewDocumentFromReader", err)
+	}
+
+	var IDs []string
+	doc.Find("input.inline").Each(func(_ int, s *goquery.Selection) {
+		val, isExist := s.Attr("name")
+		if isExist {
+			IDs = append(IDs, val)
+		}
+	})
+	return IDs, nil
+}
